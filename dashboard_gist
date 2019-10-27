@@ -1,0 +1,86 @@
+```{r setup, include = FALSE}
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(flexdashboard)
+
+airline <- read_csv("~/shared/minor2_2019/1-Intro/data/airline_sub_3.csv")
+airport <- read_csv("~/shared/minor2_2019/1-Intro/data/airport_sub_3.csv")
+lounge <-  read_csv("~/shared/minor2_2019/1-Intro/data/lounge_sub_3.csv")
+seat <-  read_csv("~/shared/minor2_2019/1-Intro/data/seat_sub_3.csv")
+
+airline_business <- filter(airline, cabin_flown == "Business Class" | cabin_flown == "First Class")
+lounge_business <- filter(lounge, lounge_type == "Business Class" | lounge_type == "First Class")
+```
+
+Row
+-----------------------------------------------------------------------
+
+### Топ-10 конкурентов
+```{r}
+airline_business_counts <- airline_business %>% count(airline_name) 
+ggplot(top_n(airline_business_counts, n, n = 10), mapping = aes(x=airline_name, y=n)) +
+  geom_point(color="orange", size=4) + 
+  geom_segment( aes(x=airline_name, xend=airline_name, y=0, yend=n), color="grey") +
+   theme_classic() +
+  theme(
+    panel.grid.major.x = element_blank(),
+    panel.border = element_blank(),
+    axis.ticks.x = element_blank()) +
+  xlab("Названия авиакомпаний") +
+  ylab("Количество отзывов") +
+  coord_flip()
+```
+
+### Кто путешествует бизнес-классом
+```{r}
+library(viridis)
+airline_business_type <- airline_business %>% count(type_traveller) %>% na.omit() 
+ggplot(top_n(airline_business_type, n, n = 3), aes(x="", y=n, fill=type_traveller)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0) +
+  theme_void()  + 
+  labs(fill = "Тип путешественников") +
+  scale_fill_viridis(discrete = TRUE, option = "D")
+```
+
+Row 1
+-----------------------------------------------------------------------
+
+### Зависимость общей оценки от комфортности сидений
+```{r warning = FALSE}
+airline_business_rating <- airline_business %>% filter(!is.na(seat_comfort_rating) & !is.na(cabin_staff_rating) & !is.na(inflight_entertainment_rating) & !is.na(food_beverages_rating))
+ggplot(data = airline_business_rating) + 
+  geom_jitter(aes(x = seat_comfort_rating, y = overall_rating), alpha = 0.5, size = 5, color = "#003f5c") + 
+  xlab("Комфортность сидений") +
+  ylab("Общая оценка полёта") +
+  theme_light() 
+```
+
+### Зависимость общей оценки от работы персонала на борту
+```{r warning = FALSE}
+ggplot(data = airline_business_rating) + 
+  geom_jitter(aes(x = cabin_staff_rating, y = overall_rating), alpha = 0.5, size = 5, color = "#bc5090") + 
+  xlab("Оценка работы персонала на борту") +
+  ylab("Общая оценка полёта") +
+  theme_light()
+```
+
+### Зависимость общей оценки от оценки развлечений в полёте
+```{r warning = FALSE}
+ggplot(data = airline_business_rating) + 
+  geom_jitter(aes(x = inflight_entertainment_rating, y = overall_rating), alpha = 0.5, size = 5, color = "#ffa600") + 
+  xlab("Оценка развлечений в полёте") +
+  ylab("Общая оценка полёта") +
+  theme_light()
+```
+
+### Зависимость общей оценки от оценки еды в полёте
+```{r warning = FALSE}
+ggplot(data = airline_business_rating) + 
+  geom_jitter(aes(x = food_beverages_rating, y = overall_rating), alpha = 0.5, size = 5, color = "#7a5195") + 
+  xlab("Оценка еды в полёте") +
+  ylab("Общая оценка полёта") +
+  theme_light()
+```
+
